@@ -8,6 +8,7 @@ pipeline {
         FUNCTION_VERSION      = '1.0'  // Initial version
         S3_BUCKET             = 'bimaplan-serverless-code7803'
         LAMBDA_CODE_KEY       = 'lambda_function_code'
+        AWS_REGION            = 'ap-south-1'
     }
 
     stages {
