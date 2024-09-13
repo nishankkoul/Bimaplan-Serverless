@@ -11,24 +11,6 @@ pipeline {
     }
 
     stages {
-        stage('Check Current Version') {
-            steps {
-                script {
-                    // Check if the object already exists in S3
-                    def currentVersion = env.FUNCTION_VERSION
-                    def result = sh(script: "aws s3 ls s3://${S3_BUCKET}/${LAMBDA_CODE_KEY}_${currentVersion}.zip", returnStatus: true)
-                    
-                    if (result == 0) {
-                        echo "Object for version ${currentVersion} already exists."
-                    } else {
-                        echo "Object for version ${currentVersion} does not exist."
-                        // Initialize version to 1.0 if this is the first run
-                        // No need to upload version.txt as per your request
-                    }
-                }
-            }
-        }
-
         stage('Terraform Init') {
             steps {
                 sh '''
@@ -52,19 +34,20 @@ pipeline {
         stage('Backup and Update Lambda Code') {
             steps {
                 script {
-                    def currentVersion = env.FUNCTION_VERSION
-                    def result = sh(script: "aws s3 ls s3://${S3_BUCKET}/${LAMBDA_CODE_KEY}_${currentVersion}.zip", returnStatus: true)
+                    // Upload new code to S3 with the same name
+                    def result = sh(script: "aws s3 ls s3://${S3_BUCKET}/${LAMBDA_CODE_KEY}.zip", returnStatus: true)
                     
                     if (result == 0) {
-                        echo "Updating existing object for version ${currentVersion}"
-                        // If the object exists, increment the version
-                        def newVersion = (currentVersion.toFloat() + 0.1).toString()
-                        sh "aws s3 cp lambda_function.zip s3://${S3_BUCKET}/${LAMBDA_CODE_KEY}_${newVersion}.zip"
-                        env.FUNCTION_VERSION = newVersion
+                        echo "Updating existing object"
                     } else {
-                        echo "Uploading new object for version ${currentVersion}"
-                        sh "aws s3 cp lambda_function.zip s3://${S3_BUCKET}/${LAMBDA_CODE_KEY}_${currentVersion}.zip"
+                        echo "Uploading new object"
                     }
+
+                    sh "aws s3 cp lambda_function.zip s3://${S3_BUCKET}/${LAMBDA_CODE_KEY}.zip"
+                    
+                    // Increment the version number internally
+                    def newVersion = (env.FUNCTION_VERSION.toFloat() + 0.1).toString()
+                    env.FUNCTION_VERSION = newVersion
                 }
             }
         }
