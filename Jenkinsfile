@@ -5,10 +5,25 @@ pipeline {
         AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
         TF_IN_AUTOMATION      = '1'
-        FUNCTION_VERSION      = '1.0'  // Initial version
+        VERSION_FILE          = 'version.txt'  // File to track the current version
+        CURRENT_VERSION       = ''  // Initialize as empty, will be set dynamically
     }
 
     stages {
+        stage('Initialize Version') {
+            steps {
+                script {
+                    // Read the current version from the version file
+                    def versionOutput = sh(script: 'aws s3 cp s3://bimaplan-serverless-code7803/${VERSION_FILE} -', returnStdout: true).trim()
+                    if (versionOutput) {
+                        env.CURRENT_VERSION = versionOutput
+                    } else {
+                        env.CURRENT_VERSION = '1.0'
+                    }
+                }
+            }
+        }
+
         stage('Terraform Init') {
             steps {
                 sh '''
@@ -22,7 +37,7 @@ pipeline {
 
         stage('Terraform Plan') {
             steps {
-                sh 'terraform plan -var="function_version=${FUNCTION_VERSION}" -out=tfplan'
+                sh 'terraform plan -var="function_version=${CURRENT_VERSION}" -out=tfplan'
             }
         }
 
@@ -32,27 +47,22 @@ pipeline {
             }
         }
 
-        stage('Backup Current Version') {
-            steps {
-                sh 'aws s3 cp lambda_function.zip s3://bimaplan-serverless-code7803/lambda_function_${FUNCTION_VERSION}.zip'
-            }
-        }
-
-        stage('Update Version') {
+        stage('Backup and Update Lambda Code') {
             steps {
                 script {
                     // Increment the version by 0.1
-                    def currentVersion = env.FUNCTION_VERSION.toFloat()
-                    def newVersion = String.format("%.1f", currentVersion + 0.1)
-                    // Set the new version in the environment
-                    env.FUNCTION_VERSION = newVersion
+                    def newVersion = (CURRENT_VERSION.toFloat() + 0.1).toString()
+                    def formattedVersion = String.format("%.1f", newVersion.toFloat())
+                    
+                    // Update the version file with the new version
+                    writeFile file: VERSION_FILE, text: formattedVersion
+                    
+                    // Upload the Lambda function zip with the new version name
+                    sh "aws s3 cp lambda_function.zip s3://bimaplan-serverless-code7803/lambda_function_${formattedVersion}.zip"
+                    
+                    // Upload the new version file to S3
+                    sh "aws s3 cp ${VERSION_FILE} s3://bimaplan-serverless-code7803/${VERSION_FILE}"
                 }
-            }
-        }
-
-        stage('Update Lambda Code in S3') {
-            steps {
-                sh 'aws s3 cp lambda_function.zip s3://bimaplan-serverless-code7803/lambda_function_${FUNCTION_VERSION}.zip'
             }
         }
 
