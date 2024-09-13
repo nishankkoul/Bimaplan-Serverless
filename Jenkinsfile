@@ -6,7 +6,7 @@ pipeline {
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
         TF_IN_AUTOMATION      = '1'
         FUNCTION_VERSION      = '1.0'  // Initial version
-        S3_BUCKET             = 'bimaplan-serverless-code7803'
+        S3_BUCKET             = credentials('S3_BUCKET')
         LAMBDA_CODE_KEY       = 'lambda_function_code'
         AWS_REGION            = 'ap-south-1'  // AWS Region
     }
