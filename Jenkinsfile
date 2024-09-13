@@ -5,7 +5,7 @@ pipeline {
         AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
         TF_IN_AUTOMATION      = '1'
-        FUNCTION_VERSION      = '5.0'
+        FUNCTION_VERSION      = '1.0'  // Initial version
     }
 
     stages {
@@ -32,18 +32,20 @@ pipeline {
             }
         }
 
-        stage('Update Version') {
+        stage('Backup Current Version') {
             steps {
-                script {
-                    def newVersion = (FUNCTION_VERSION.toFloat() + 0.1).toString()
-                    env.FUNCTION_VERSION = newVersion
-                }
+                sh 'aws s3 cp lambda_function.zip s3://bimaplan-serverless-code7803/lambda_function_${FUNCTION_VERSION}.zip'
             }
         }
 
-        stage('Backup Previous Version') {
+        stage('Update Version') {
             steps {
-                sh 'aws s3 cp lambda_function.zip s3://bimaplan-serverless-code7803/lambda_function_${FUNCTION_VERSION}.zip'
+                script {
+                    // Increment the version by 0.1
+                    def newVersion = (FUNCTION_VERSION.toFloat() + 0.1).toString()
+                    // Set the new version in the environment
+                    env.FUNCTION_VERSION = newVersion
+                }
             }
         }
 
