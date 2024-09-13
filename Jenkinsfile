@@ -5,16 +5,16 @@ pipeline {
         AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
         TF_IN_AUTOMATION      = '1'
-        FUNCTION_VERSION      = '4.67.0'
+        FUNCTION_VERSION      = '5.0'
     }
 
     stages {
         stage('Terraform Init') {
             steps {
                 sh '''
-                terraform init \
-                  -backend-config=bucket=bimaplan-serverless-code7803 \
-                  -backend-config=key=terraform.tfstate \
+                terraform init -upgrade \\
+                  -backend-config=bucket=bimaplan-serverless-code7803 \\
+                  -backend-config=key=terraform.tfstate \\
                   -backend-config=region=ap-south-1
                 '''
             }
