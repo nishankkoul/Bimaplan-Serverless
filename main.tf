@@ -6,6 +6,11 @@ resource "aws_lambda_function" "hello_world" {
   source_code_hash = filebase64sha256("lambda_function.zip")
   runtime          = "nodejs18.x"  
 
+  environment {
+    variables = {
+      VERSION = var.function_version
+    }
+  }
 }
 
 resource "aws_iam_role" "lambda_role" {
