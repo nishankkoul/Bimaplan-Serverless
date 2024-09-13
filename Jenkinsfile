@@ -42,10 +42,17 @@ pipeline {
             steps {
                 script {
                     // Increment the version by 0.1
-                    def newVersion = (FUNCTION_VERSION.toFloat() + 0.1).toString()
+                    def currentVersion = env.FUNCTION_VERSION.toFloat()
+                    def newVersion = String.format("%.1f", currentVersion + 0.1)
                     // Set the new version in the environment
                     env.FUNCTION_VERSION = newVersion
                 }
+            }
+        }
+
+        stage('Update Lambda Code in S3') {
+            steps {
+                sh 'aws s3 cp lambda_function.zip s3://bimaplan-serverless-code7803/lambda_function_${FUNCTION_VERSION}.zip'
             }
         }
 
