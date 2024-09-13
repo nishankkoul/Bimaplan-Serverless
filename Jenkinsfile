@@ -13,11 +13,16 @@ pipeline {
         stage('Initialize Version') {
             steps {
                 script {
-                    // Read the current version from the version file
-                    def versionOutput = sh(script: 'aws s3 cp s3://bimaplan-serverless-code7803/${VERSION_FILE} -', returnStdout: true).trim()
-                    if (versionOutput) {
-                        env.CURRENT_VERSION = versionOutput
-                    } else {
+                    try {
+                        // Attempt to read the current version from the version file
+                        def versionOutput = sh(script: 'aws s3 cp s3://bimaplan-serverless-code7803/${VERSION_FILE} -', returnStdout: true).trim()
+                        if (versionOutput) {
+                            env.CURRENT_VERSION = versionOutput
+                        } else {
+                            env.CURRENT_VERSION = '1.0'
+                        }
+                    } catch (Exception e) {
+                        // If the file is not found, initialize with a default version
                         env.CURRENT_VERSION = '1.0'
                     }
                 }
@@ -58,7 +63,7 @@ pipeline {
                     writeFile file: VERSION_FILE, text: formattedVersion
                     
                     // Upload the Lambda function zip with the new version name
-                    sh "aws s3 cp lambda_function.zip s3://bimaplan-serverless-code7803/lambda_function_${formattedVersion}.zip"
+                    sh "aws s3 cp lambda_function.zip s3://bimaplan-serverless-code7803/lambda_function.zip"
                     
                     // Upload the new version file to S3
                     sh "aws s3 cp ${VERSION_FILE} s3://bimaplan-serverless-code7803/${VERSION_FILE}"
