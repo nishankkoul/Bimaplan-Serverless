@@ -4,7 +4,6 @@ pipeline {
     environment {
         AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
-        TF_IN_AUTOMATION      = '1'
         FUNCTION_VERSION_FILE = 'version.txt'
         S3_BUCKET             = credentials('S3_BUCKET')
         LAMBDA_CODE_KEY       = 'lambda_function_code'
