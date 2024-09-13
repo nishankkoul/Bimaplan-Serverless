@@ -11,7 +11,12 @@ pipeline {
     stages {
         stage('Terraform Init') {
             steps {
-                sh 'terraform init -backend-config="bucket=bimaplan-serverless-code7803" -backend-config="key=terraform.tfstate" -backend-config="region=ap-south-1"'
+                sh '''
+                terraform init \
+                  -backend-config=bucket=bimaplan-serverless-code7803 \
+                  -backend-config=key=terraform.tfstate \
+                  -backend-config=region=ap-south-1
+                '''
             }
         }
 
