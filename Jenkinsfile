@@ -12,13 +12,6 @@ pipeline {
     }
 
     stages {
-        stage('Check Environment') {
-            steps {
-                sh 'echo "AWS Region: ${AWS_REGION}"'
-                sh 'echo "S3 Bucket: ${S3_BUCKET}"'
-            }
-        }
-
         stage('Terraform Init') {
             steps {
                 script {
