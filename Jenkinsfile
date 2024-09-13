@@ -11,15 +11,18 @@ pipeline {
     }
 
     stages {
-        stage('Terraform Init') {
-            steps {
-                script {
-                    sh '''
-                    terraform init -upgrade -backend-config="bucket=${S3_BUCKET}" -backend-config="key=terraform.tfstate" -backend-config="region=${AWS_REGION}"
-                    '''
-                }
-            }
+       stage('Terraform Init') {
+    steps {
+        script {
+            sh '''
+            terraform init -upgrade \
+                -backend-config="bucket=${S3_BUCKET}" \
+                -backend-config="key=terraform.tfstate" \
+                -backend-config="region=${AWS_REGION}"
+            '''
         }
+    }
+}
 
         stage('Terraform Plan') {
             steps {
