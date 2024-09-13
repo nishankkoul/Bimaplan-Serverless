@@ -4,7 +4,7 @@ resource "aws_lambda_function" "hello_world" {
   role             = aws_iam_role.lambda_role.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256("lambda_function.zip")
-  runtime          = "nodejs14.x"
+  runtime          = "nodejs20.x"  
 
   environment {
     variables = {
