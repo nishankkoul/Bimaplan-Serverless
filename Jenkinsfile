@@ -8,6 +8,7 @@ pipeline {
         S3_BUCKET             = credentials('S3_BUCKET')
         LAMBDA_CODE_KEY       = 'lambda_function_code'
         AWS_REGION            = 'ap-south-1'
+        STATE_BACKUP_KEY      = 'terraform-backend.tfstate'
     }
 
     stages {
@@ -31,6 +32,7 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 script {
+                    // Initialize Terraform and store both state and backend in S3
                     sh '''
                     terraform init -upgrade \
                         -reconfigure \
@@ -38,6 +40,11 @@ pipeline {
                         -backend-config="key=terraform.tfstate" \
                         -backend-config="region=${AWS_REGION}" \
                         -force-copy
+                    '''
+                    
+                    // Backup the state backend file in S3
+                    sh '''
+                    aws s3 cp .terraform/terraform.tfstate s3://${S3_BUCKET}/${STATE_BACKUP_KEY} --region ${AWS_REGION}
                     '''
                 }
             }
