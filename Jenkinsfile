@@ -20,7 +20,7 @@ pipeline {
                     
                     if (result == 0) {
                         // Read the version from file
-                        env.FUNCTION_VERSION = readFile('version.txt').trim()
+                        env.FUNCTION_VERSION = readFile('version.txt').split('\\|')[0].trim()
                     } else {
                         // Set default version if file does not exist
                         env.FUNCTION_VERSION = '1.0'
@@ -71,14 +71,22 @@ pipeline {
                     if (result == 0) {
                         echo "Updating existing object for version ${currentVersion}"
                         def newVersion = (currentVersion.toFloat() + 0.1).toString()
+                        def timestamp = sh(script: "date +'%Y-%m-%d %H:%M:%S'", returnStdout: true).trim()
+                        
                         sh "aws s3 cp lambda_function.zip s3://${S3_BUCKET}/${LAMBDA_CODE_KEY}.zip"
-                        writeFile(file: 'version.txt', text: newVersion)
+                        
+                        // Store version and timestamp in version.txt
+                        writeFile(file: 'version.txt', text: "${newVersion} | ${timestamp}")
                         sh "aws s3 cp version.txt s3://${S3_BUCKET}/${FUNCTION_VERSION_FILE} --region ${AWS_REGION}"
                     } else {
                         echo "Uploading new object for version ${currentVersion}"
-                        sh "aws s3 cp lambda_function.zip s3://${S3_BUCKET}/${LAMBDA_CODE_KEY}.zip"
                         def newVersion = (currentVersion.toFloat() + 0.1).toString()
-                        writeFile(file: 'version.txt', text: newVersion)
+                        def timestamp = sh(script: "date +'%Y-%m-%d %H:%M:%S'", returnStdout: true).trim()
+                        
+                        sh "aws s3 cp lambda_function.zip s3://${S3_BUCKET}/${LAMBDA_CODE_KEY}.zip"
+                        
+                        // Store version and timestamp in version.txt
+                        writeFile(file: 'version.txt', text: "${newVersion} | ${timestamp}")
                         sh "aws s3 cp version.txt s3://${S3_BUCKET}/${FUNCTION_VERSION_FILE} --region ${AWS_REGION}"
                     }
                 }
